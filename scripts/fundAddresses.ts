@@ -4,7 +4,10 @@ import path from 'path';
 import { Account } from '../types/account';
 import { Contract, formatEther, formatUnits, parseEther, parseUnits, Signer } from 'ethers';
 
-const MULTICALL_ADDRESS = "0xaD8B3b3B10e86960cdB66744bf99477d28cB6362";
+const MULTICALL_ADDRESS: { [key: string]: string } = {
+  etherlinkTestnet: "0xaD8B3b3B10e86960cdB66744bf99477d28cB6362",
+  etherlink: "0x06B9d55c5763354E1a8A5c2DB14936DDb5b00823"
+};
 const MULTICALL_ABI = [
   "function multiCall(address[] calldata targets, uint256[] calldata values, bytes[] calldata data) payable returns (bool[] memory)"
 ];
@@ -12,8 +15,8 @@ const MULTICALL_ABI = [
 // Settings here
 const FUND_ERC20 = true; // If yes then fund in ERC20 token, if no then fund gas token only
 const AMOUNT_OF_ACCOUNTS = 1000; // max is 10k from the file atm
-const GAS_FUNDING_AMOUNT = parseEther('0.01'); // amount of gas token
-const TOKEN_FUNDING_AMOUNT = "1"; // amount of testnet token, use string to let the code deals with decimals
+const GAS_FUNDING_AMOUNT = parseEther('0.25'); // amount of gas token
+const TOKEN_FUNDING_AMOUNT = "0.0001"; // amount of testnet token, use string to let the code deals with decimals
 
 const MULTICALL_BATCH_SIZE = 100; // Maximum number of addresses per multicall
 const TIMESTAMPS_BETWEEN_BATCHES = 500; // Time in milliseconds between multicall batches
@@ -146,18 +149,18 @@ async function fundAccountsWithMulticall(
     throw new Error('Signer must be connected to a provider');
   }
 
-  const multicall = new Contract(MULTICALL_ADDRESS, MULTICALL_ABI, mainSigner);
+  const multicall = new Contract(MULTICALL_ADDRESS[network.name], MULTICALL_ABI, mainSigner);
   const totalBatches = Math.ceil(accounts.length / MULTICALL_BATCH_SIZE);
 
   const erc20Address = await erc20.getAddress();
   const decimals = await erc20.decimals();
 
   if (FUND_ERC20) {
-    const currentAllowance = await erc20.allowance(await mainSigner.getAddress(), MULTICALL_ADDRESS);
+    const currentAllowance = await erc20.allowance(await mainSigner.getAddress(), MULTICALL_ADDRESS[network.name]);
     const requiredAllowance = parseUnits(TOKEN_FUNDING_AMOUNT, decimals) * BigInt(accounts.length);
 
     if (currentAllowance < requiredAllowance) {
-      await approveMulticall(erc20, MULTICALL_ADDRESS, accounts, TOKEN_FUNDING_AMOUNT, decimals);
+      await approveMulticall(erc20, MULTICALL_ADDRESS[network.name], accounts, TOKEN_FUNDING_AMOUNT, decimals);
     } else {
       console.log(`\nMulticall already has sufficient allowance (${formatUnits(currentAllowance, decimals)} tokens).`);
     }
@@ -178,7 +181,7 @@ async function fundAccountsWithMulticall(
 
     // native token transfer
     // no await to go faster
-    processMulticallBatch(
+    await processMulticallBatch(
       senderAddress,
       accounts,
       i,
@@ -194,7 +197,7 @@ async function fundAccountsWithMulticall(
     // ERC20 token transfer
     if (FUND_ERC20) {
       // no await to go faster
-      processMulticallBatch(
+      await processMulticallBatch(
         senderAddress,
         accounts,
         i,
@@ -219,7 +222,7 @@ async function fundAccountsWithMulticall(
       await new Promise(resolve => setTimeout(resolve, TIMESTAMPS_BETWEEN_BATCHES));
     }
   }
-  console.log(`\nAmount of transactions sent: ${totalBatches * 2}`);
+  console.log(`\nAmount of transactions sent: ${FUND_ERC20 ? totalBatches * 2 : totalBatches}`);
   console.log(`\nFunding complete.`);
 }
 
