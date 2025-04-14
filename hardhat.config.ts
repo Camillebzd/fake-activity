@@ -54,6 +54,22 @@ const BSCSCAN_API_KEY =
   process.env.BSCSCAN_API_KEY ||
   "";
 
+// Optimism
+const OPTIMISM_SEPOLIA_RPC_URL =
+  process.env.OPTIMISM_SEPOLIA_RPC_URL ||
+  "https://optimism-sepolia.drpc.org";
+const OPTIMISM_SEPOLIA_API_KEY =
+  process.env.OPTIMISM_SEPOLIA_API_KEY ||
+  "";
+
+// Base
+const BASE_SEPOLIA_RPC_URL =
+  process.env.BASE_SEPOLIA_RPC_URL ||
+  "https://base-sepolia.drpc.org";
+const BASE_SEPOLIA_API_KEY =
+  process.env.BASE_SEPOLIA_API_KEY ||
+  "";
+
 const config: HardhatUserConfig = {
   solidity: "0.8.22",
   defaultNetwork: "hardhat",
@@ -94,7 +110,18 @@ const config: HardhatUserConfig = {
       chainId: 97,
       url: BSC_TESTNET_URL,
       accounts: [PRIVATE_KEY],
-    }
+    },
+    optimismSepolia: {
+      chainId: 11155420,
+      url: OPTIMISM_SEPOLIA_RPC_URL,
+      accounts: [PRIVATE_KEY],
+    },
+    baseSepolia: {
+      chainId: 84532,
+      url: BASE_SEPOLIA_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      timeout: 120000
+    },
   },
   etherscan: {
     apiKey: {
@@ -104,6 +131,8 @@ const config: HardhatUserConfig = {
       etherlink: ETHERLINK_API_KEY,
       arbitrumSepolia: ARBITRUM_SEPOLIA_API_KEY,
       bscTestnet: BSCSCAN_API_KEY,
+      optimismSepolia: OPTIMISM_SEPOLIA_API_KEY,
+      baseSepolia: BASE_SEPOLIA_API_KEY,
     },
     customChains: [
       {

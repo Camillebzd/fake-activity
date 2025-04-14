@@ -13,5 +13,9 @@
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "dotenv": "^16.4.7",
     "hardhat": "^2.22.18"
+  },
+  "dependencies": {
+    "@layerzerolabs/solidity-examples": "0.0.6",
+    "@openzeppelin/contracts": "^4.4.1"
   }
 }
